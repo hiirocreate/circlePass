@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --shop-accent-color: #c9a227;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
