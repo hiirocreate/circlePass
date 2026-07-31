@@ -111,6 +111,13 @@ export default function OperatorAdminPage() {
         </Card>
       </Link>
 
+      <Link href="/admin/plans">
+        <Card className="hover:bg-black/5">
+          <p className="font-semibold">サブスクプラン管理(代理作成)</p>
+          <p className="text-sm text-black/50">店舗を選んで、代わりにプランを作成・編集</p>
+        </Card>
+      </Link>
+
       <Card className="space-y-2">
         <p className="text-sm font-semibold">店舗新規登録</p>
         <input
