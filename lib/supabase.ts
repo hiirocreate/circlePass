@@ -1,11 +1,17 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * ブラウザ(クライアントコンポーネント)用。
  * anon keyを使うため、RLSで許可された範囲のみアクセス可能。
+ *
+ * 店舗管理者・運営のログインセッションは middleware.ts や
+ * lib/supabase-admin-server.ts がCookie経由で読み取る仕組みのため、
+ * ここは(localStorageに保存する通常のsupabase-jsクライアントではなく)
+ * Cookieにセッションを保存する @supabase/ssr の createBrowserClient を使う。
  */
 export function createBrowserSupabase(): SupabaseClient {
-  return createClient(
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
