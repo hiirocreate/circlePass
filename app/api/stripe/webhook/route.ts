@@ -24,7 +24,27 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const cs = event.data.object as Stripe.Checkout.Session;
-      const { user_id, plan_id, shop_id, line_id } = cs.metadata ?? {};
+      const metadata = cs.metadata ?? {};
+
+      // 店舗→運営のSaaS利用料契約
+      if (metadata.type === "saas_subscription") {
+        const { shop_id, saas_plan } = metadata;
+        if (!shop_id) break;
+
+        await supabase
+          .from("shops")
+          .update({
+            saas_stripe_customer_id: cs.customer as string,
+            saas_stripe_subscription_id: cs.subscription as string,
+            saas_plan: saas_plan ?? "light",
+            saas_payment_status: "active",
+          })
+          .eq("id", shop_id);
+        break;
+      }
+
+      // 店舗の顧客(LINEユーザー)による会員証サブスク申し込み
+      const { user_id, plan_id, shop_id, line_id } = metadata;
       if (!user_id || !plan_id || !shop_id) break;
 
       const stripeSub = await stripe.subscriptions.retrieve(cs.subscription as string);
@@ -75,7 +95,14 @@ export async function POST(req: NextRequest) {
           status: "paid",
           paid_at: new Date().toISOString(),
         });
+        break;
       }
+
+      // 店舗→運営のSaaS利用料の支払い
+      await supabase
+        .from("shops")
+        .update({ saas_payment_status: "active" })
+        .eq("saas_stripe_subscription_id", stripeSubId);
       break;
     }
 
@@ -103,16 +130,35 @@ export async function POST(req: NextRequest) {
           const token = await getShopLineToken(supabase, sub.shop_id);
           await sendLineMessage(lineId, "決済に失敗しました。カード情報をご確認ください。", token);
         }
+        break;
       }
+
+      // 店舗→運営のSaaS利用料の支払い失敗(店舗の停止は行わず、状態のみ記録する。
+      // 強制停止するかどうかは運営が管理画面から判断する運用)
+      await supabase
+        .from("shops")
+        .update({ saas_payment_status: "past_due" })
+        .eq("saas_stripe_subscription_id", stripeSubId);
       break;
     }
 
     case "customer.subscription.deleted": {
       const stripeSub = event.data.object as Stripe.Subscription;
-      await supabase
+
+      const { data: updatedSub } = await supabase
         .from("subscriptions")
         .update({ status: "canceled", canceled_at: new Date().toISOString() })
-        .eq("stripe_subscription_id", stripeSub.id);
+        .eq("stripe_subscription_id", stripeSub.id)
+        .select()
+        .maybeSingle();
+
+      if (!updatedSub) {
+        // 店舗→運営のSaaS利用料契約が完全に終了した場合は、自動的に店舗を停止する
+        await supabase
+          .from("shops")
+          .update({ saas_payment_status: "canceled", is_active: false })
+          .eq("saas_stripe_subscription_id", stripeSub.id);
+      }
       break;
     }
 

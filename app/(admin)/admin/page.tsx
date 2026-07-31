@@ -118,6 +118,13 @@ export default function OperatorAdminPage() {
         </Card>
       </Link>
 
+      <Link href="/admin/billing">
+        <Card className="hover:bg-black/5">
+          <p className="font-semibold">SaaS利用料 代理管理</p>
+          <p className="text-sm text-black/50">店舗を選んで、SaaS利用料の契約状況を確認・操作</p>
+        </Card>
+      </Link>
+
       <Card className="space-y-2">
         <p className="text-sm font-semibold">店舗新規登録</p>
         <input
@@ -217,7 +224,12 @@ export default function OperatorAdminPage() {
             <div>
               <p className="font-semibold">{shop.name}</p>
               <p className="text-xs text-black/50">
-                契約プラン: {shop.saas_plan} / {shop.is_active ? "稼働中" : "停止中"}
+                契約プラン: {shop.saas_plan}(
+                {shop.saas_payment_status === "active" && "支払い中"}
+                {shop.saas_payment_status === "unpaid" && "未契約"}
+                {shop.saas_payment_status === "past_due" && "支払い失敗中"}
+                {shop.saas_payment_status === "canceled" && "解約済み"}
+                ) / {shop.is_active ? "稼働中" : "停止中"}
               </p>
             </div>
             <Button

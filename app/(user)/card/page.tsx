@@ -64,6 +64,23 @@ function CardPageContent() {
     setLoading(false);
   };
 
+  const openBillingPortal = async () => {
+    if (!subscription) return;
+    setLoading(true);
+    const res = await fetch("/api/stripe/portal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ context: "member_subscription", subscriptionId: subscription.id }),
+    });
+    const d = await res.json();
+    if (d.error) {
+      alert(d.error);
+      setLoading(false);
+      return;
+    }
+    window.location.href = d.url;
+  };
+
   if (!shopId) return null;
 
   if (shop && !shop.feature_subscription_enabled) {
@@ -92,7 +109,10 @@ function CardPageContent() {
           <p className="mt-3 text-center text-xs text-white/60">
             店舗スタッフにこのQRコードを読み取ってもらってください
           </p>
-          <Button variant="outline" className="mt-4 bg-transparent text-white border-white/30" onClick={cancel} disabled={loading}>
+          <Button className="mt-4" onClick={openBillingPortal} disabled={loading}>
+            お支払い方法・請求書を確認する
+          </Button>
+          <Button variant="outline" className="mt-2 bg-transparent text-white border-white/30" onClick={cancel} disabled={loading}>
             解約する
           </Button>
         </Card>

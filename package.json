@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "richmenu:create": "ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/create-rich-menu.ts"
+    "richmenu:create": "ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/create-rich-menu.ts",
+    "saas-plans:create": "ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/create-saas-plans.ts"
   },
   "dependencies": {
     "next": "14.2.5",

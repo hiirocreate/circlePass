@@ -22,6 +22,7 @@ const MENU: { href: string; label: string; desc: string; feature?: "subscription
     feature: "subscription",
   },
   { href: "/dashboard/sales", label: "売上・決済履歴", desc: "月別売上と決済履歴の確認", feature: "subscription" },
+  { href: "/dashboard/billing", label: "お支払い設定", desc: "運営へのSaaS利用料のお支払い管理" },
 ];
 
 export default function DashboardPage() {
