@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import type { Shop, Subscription } from "@/types";
 
-export default function HomePage() {
+function HomePageContent() {
   const shopId = useShopId();
   const [shop, setShop] = useState<Shop | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
@@ -98,5 +98,13 @@ export default function HomePage() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-black/60">読み込み中です…</p>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

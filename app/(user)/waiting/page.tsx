@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-export default function WaitingPage() {
+function WaitingPageContent() {
   const shopId = useShopId();
   const [shop, setShop] = useState<any>(null);
   const [waiting, setWaiting] = useState<any>(null);
@@ -138,5 +138,13 @@ export default function WaitingPage() {
         登録する
       </Button>
     </div>
+  );
+}
+
+export default function WaitingPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-black/60">読み込み中です…</p>}>
+      <WaitingPageContent />
+    </Suspense>
   );
 }

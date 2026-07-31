@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-export default function CardPage() {
+function CardPageContent() {
   const shopId = useShopId();
   const [shop, setShop] = useState<any>(null);
   const [plans, setPlans] = useState<any[]>([]);
@@ -117,5 +117,13 @@ export default function CardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CardPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-black/60">読み込み中です…</p>}>
+      <CardPageContent />
+    </Suspense>
   );
 }

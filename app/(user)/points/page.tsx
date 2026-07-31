@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
-export default function PointsPage() {
+function PointsPageContent() {
   const shopId = useShopId();
   const [shop, setShop] = useState<any>(null);
   const [points, setPoints] = useState(0);
@@ -131,5 +131,13 @@ export default function PointsPage() {
         {rewards.length === 0 && <p className="text-sm text-black/40">現在交換できる特典はありません</p>}
       </div>
     </div>
+  );
+}
+
+export default function PointsPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-black/60">読み込み中です…</p>}>
+      <PointsPageContent />
+    </Suspense>
   );
 }
