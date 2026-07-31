@@ -6,6 +6,7 @@ import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 function PointsPageContent() {
   const shopId = useShopId();
@@ -81,6 +82,7 @@ function PointsPageContent() {
   if (pending) {
     return (
       <div className="space-y-4 p-4">
+        <BackLink href="/home" />
         <h1 className="text-lg font-bold">特典交換</h1>
         <Card className="bg-black text-white">
           <p className="text-xs text-white/60">交換内容</p>
@@ -102,6 +104,7 @@ function PointsPageContent() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/home" />
       <h1 className="text-lg font-bold">来店ポイント</h1>
       <Card className="text-center">
         <p className="text-xs text-black/50">保有ポイント</p>

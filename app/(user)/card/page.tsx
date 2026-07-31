@@ -6,6 +6,7 @@ import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 function CardPageContent() {
   const shopId = useShopId();
@@ -75,6 +76,7 @@ function CardPageContent() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/home" />
       <h1 className="text-lg font-bold">会員証</h1>
 
       {subscription ? (

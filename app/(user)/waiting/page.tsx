@@ -5,6 +5,7 @@ import { useShopId } from "@/lib/useShopId";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 function WaitingPageContent() {
   const shopId = useShopId();
@@ -84,6 +85,7 @@ function WaitingPageContent() {
   if (waiting) {
     return (
       <div className="space-y-4 p-4">
+        <BackLink href="/home" />
         <h1 className="text-lg font-bold">順番待ち状況</h1>
         <Card className="text-center">
           <p className="text-xs text-black/50">受付番号</p>
@@ -103,6 +105,7 @@ function WaitingPageContent() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/home" />
       <h1 className="text-lg font-bold">順番待ち登録</h1>
       <Card className="space-y-3">
         <div>

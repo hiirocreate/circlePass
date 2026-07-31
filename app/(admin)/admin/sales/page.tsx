@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { useCurrentAdmin } from "@/lib/useCurrentAdmin";
 import { SalesView } from "@/components/SalesView";
+import { BackLink } from "@/components/ui/BackLink";
 
 export default function OperatorSalesPage() {
   const { admin, loading } = useCurrentAdmin();
@@ -25,6 +26,7 @@ export default function OperatorSalesPage() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/admin" />
       <h1 className="text-lg font-bold">売上・決済履歴(運営)</h1>
 
       <select

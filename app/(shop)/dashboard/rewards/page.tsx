@@ -5,6 +5,7 @@ import { createBrowserSupabase } from "@/lib/supabase";
 import { useCurrentAdmin } from "@/lib/useCurrentAdmin";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 export default function ShopRewardsPage() {
   const { admin } = useCurrentAdmin();
@@ -49,6 +50,7 @@ export default function ShopRewardsPage() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/dashboard" />
       <h1 className="text-lg font-bold">特典交換ルール管理</h1>
       <p className="text-sm text-black/50">来店ポイントと交換できる特典を設定します。</p>
 

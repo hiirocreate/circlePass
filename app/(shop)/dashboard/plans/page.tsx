@@ -5,6 +5,7 @@ import { createBrowserSupabase } from "@/lib/supabase";
 import { useCurrentAdmin } from "@/lib/useCurrentAdmin";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 const DAY_OPTIONS = [
   { key: "mon", label: "月" },
@@ -88,6 +89,7 @@ export default function ShopPlansPage() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/dashboard" />
       <h1 className="text-lg font-bold">サブスクプラン管理</h1>
 
       <Card className="space-y-2">

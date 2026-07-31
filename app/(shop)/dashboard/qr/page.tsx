@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCurrentAdmin } from "@/lib/useCurrentAdmin";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 type ScannedSubscription = { subscriptionId: string };
 
@@ -100,6 +101,7 @@ export default function QrScanPage() {
 
   return (
     <div className="space-y-4 p-4">
+      <BackLink href="/dashboard" />
       <h1 className="text-lg font-bold">QRコード読み取り</h1>
       <div id="qr-reader" className="overflow-hidden rounded-2xl" />
 
