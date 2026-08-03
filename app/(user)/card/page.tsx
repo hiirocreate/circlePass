@@ -41,14 +41,25 @@ function CardPageContent() {
 
   const subscribe = async (planId: string) => {
     setLoading(true);
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId }),
-    });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    setLoading(false);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(`エラー: ${data.error}`);
+      } else if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("決済ページのURLを取得できませんでした(不明なエラー)");
+      }
+    } catch (e) {
+      alert("通信エラーが発生しました。もう一度お試しください。");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cancel = async () => {
