@@ -7,6 +7,31 @@ import Stripe from "stripe";
 // Next.js App RouterではWebhook署名検証のため生のbodyが必要
 export const runtime = "nodejs";
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * checkout.session.completed と invoice.paid はほぼ同時に届くことがあり、
+ * まれに invoice.paid が先に処理されて subscriptions テーブルにまだ行が無い
+ * ことがある(初回決済の売上記録が漏れる原因になる)。
+ * 見つからない場合は少し待って1回だけ再試行する。
+ */
+async function findSubscriptionByStripeId(
+  supabase: ReturnType<typeof createServiceSupabase>,
+  stripeSubId: string,
+  select = "*"
+) {
+  for (const delayMs of [0, 2000]) {
+    if (delayMs > 0) await sleep(delayMs);
+    const { data } = await supabase
+      .from("subscriptions")
+      .select(select)
+      .eq("stripe_subscription_id", stripeSubId)
+      .maybeSingle();
+    if (data) return data as any;
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
@@ -76,11 +101,7 @@ export async function POST(req: NextRequest) {
       const invoice = event.data.object as Stripe.Invoice;
       const stripeSubId = invoice.subscription as string;
 
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("stripe_subscription_id", stripeSubId)
-        .maybeSingle();
+      const sub = await findSubscriptionByStripeId(supabase, stripeSubId);
 
       if (sub) {
         await supabase
@@ -88,13 +109,23 @@ export async function POST(req: NextRequest) {
           .update({ status: "active" })
           .eq("id", sub.id);
 
-        await supabase.from("payment_histories").insert({
-          subscription_id: sub.id,
-          stripe_invoice_id: invoice.id,
-          amount: invoice.amount_paid,
-          status: "paid",
-          paid_at: new Date().toISOString(),
-        });
+        // Stripeが同じイベントを再送してくることがあるため、同じ請求書IDの
+        // 記録が既にあれば二重に売上計上しない
+        const { data: existing } = await supabase
+          .from("payment_histories")
+          .select("id")
+          .eq("stripe_invoice_id", invoice.id)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase.from("payment_histories").insert({
+            subscription_id: sub.id,
+            stripe_invoice_id: invoice.id,
+            amount: invoice.amount_paid,
+            status: "paid",
+            paid_at: new Date().toISOString(),
+          });
+        }
         break;
       }
 
@@ -110,20 +141,25 @@ export async function POST(req: NextRequest) {
       const invoice = event.data.object as Stripe.Invoice;
       const stripeSubId = invoice.subscription as string;
 
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("*, users(line_id)")
-        .eq("stripe_subscription_id", stripeSubId)
-        .maybeSingle();
+      const sub = await findSubscriptionByStripeId(supabase, stripeSubId, "*, users(line_id)");
 
       if (sub) {
         await supabase.from("subscriptions").update({ status: "past_due" }).eq("id", sub.id);
-        await supabase.from("payment_histories").insert({
-          subscription_id: sub.id,
-          stripe_invoice_id: invoice.id,
-          amount: invoice.amount_due,
-          status: "failed",
-        });
+
+        const { data: existing } = await supabase
+          .from("payment_histories")
+          .select("id")
+          .eq("stripe_invoice_id", invoice.id)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase.from("payment_histories").insert({
+            subscription_id: sub.id,
+            stripe_invoice_id: invoice.id,
+            amount: invoice.amount_due,
+            status: "failed",
+          });
+        }
 
         const lineId = (sub as any).users?.line_id;
         if (lineId) {
