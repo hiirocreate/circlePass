@@ -7,6 +7,7 @@ import { createBrowserSupabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { BackLink } from "@/components/ui/BackLink";
+import { ShopHeader } from "@/components/ShopHeader";
 
 function CardPageContent() {
   const shopId = useShopId();
@@ -105,6 +106,7 @@ function CardPageContent() {
   return (
     <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
       <BackLink href="/home" />
+      <ShopHeader shop={shop} />
       <h1 className="text-lg font-bold">会員証</h1>
 
       {subscription ? (
