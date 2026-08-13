@@ -12,7 +12,8 @@ export default function EntryPage() {
     (async () => {
       try {
         await loginWithLiff();
-        router.replace("/home");
+        const search = typeof window !== "undefined" ? window.location.search : "";
+        router.replace(`/home${search}`);
       } catch (e) {
         console.error(e);
         setError("ログインに失敗しました。時間をおいて再度お試しください。");
