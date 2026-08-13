@@ -31,7 +31,7 @@ create table shops (
   logo_url text,
   line_oa_url text, -- LINE公式アカウントURL
   qr_image_url text,
-  accent_color text default '#C9A227', -- 店舗ごとのアクセントカラー
+  accent_color text default '#EA580C', -- 店舗ごとのアクセントカラー(デフォルトはオレンジ)
   is_active boolean not null default true, -- 運営による強制停止フラグ
   -- 運営側で調整可能な、店舗ごとに利用できる機能範囲
   -- (例: 順番待ちシステムのみ利用したい店舗はfeature_subscription_enabledをfalseにする)
