@@ -51,7 +51,7 @@ export function SalesView({ shopId, showShopBreakdown }: Props) {
       </Card>
 
       <Card>
-        <p className="mb-2 text-sm font-semibold">月別売上推移(直近6ヶ月)</p>
+        <p className="mb-2 text-sm font-semibold">月別売上推移(直近1年)</p>
         <div className="space-y-1">
           {data.monthly.map((m: any) => {
             const max = Math.max(...data.monthly.map((x: any) => x.revenue), 1);
