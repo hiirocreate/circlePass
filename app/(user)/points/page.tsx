@@ -30,7 +30,7 @@ function PointsPageContent() {
     const supabase = createBrowserSupabase();
     supabase
       .from("shops")
-      .select("feature_subscription_enabled")
+      .select("feature_subscription_enabled, accent_color")
       .eq("id", shopId)
       .single()
       .then(({ data }) => setShop(data));
@@ -81,7 +81,7 @@ function PointsPageContent() {
 
   if (pending) {
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
         <BackLink href="/home" />
         <h1 className="text-lg font-bold">特典交換</h1>
         <Card className="bg-black text-white">
@@ -103,7 +103,7 @@ function PointsPageContent() {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
       <BackLink href="/home" />
       <h1 className="text-lg font-bold">来店ポイント</h1>
       <Card className="text-center">

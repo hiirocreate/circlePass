@@ -24,6 +24,7 @@ const MENU: { href: string; label: string; desc: string; feature?: "subscription
   { href: "/dashboard/sales", label: "売上・決済履歴", desc: "月別売上と決済履歴の確認", feature: "subscription" },
   { href: "/dashboard/billing", label: "お支払い設定", desc: "運営へのSaaS利用料のお支払い管理" },
   { href: "/dashboard/line-settings", label: "LINE通知設定", desc: "通知に使うLINE公式アカウントのトークン登録" },
+  { href: "/dashboard/settings", label: "テーマカラー設定", desc: "利用者アプリの見出し・金額表示などの色を変更" },
 ];
 
 export default function DashboardPage() {

@@ -103,7 +103,7 @@ function CardPageContent() {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
       <BackLink href="/home" />
       <h1 className="text-lg font-bold">会員証</h1>
 

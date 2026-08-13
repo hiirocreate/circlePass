@@ -28,7 +28,7 @@ function WaitingPageContent() {
     const supabase = createBrowserSupabase();
     supabase
       .from("shops")
-      .select("feature_waiting_enabled")
+      .select("feature_waiting_enabled, accent_color")
       .eq("id", shopId)
       .single()
       .then(({ data }) => setShop(data));
@@ -84,7 +84,7 @@ function WaitingPageContent() {
 
   if (waiting) {
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
         <BackLink href="/home" />
         <h1 className="text-lg font-bold">順番待ち状況</h1>
         <Card className="text-center">
@@ -104,7 +104,7 @@ function WaitingPageContent() {
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4" style={{ ["--shop-accent-color" as any]: shop?.accent_color }}>
       <BackLink href="/home" />
       <h1 className="text-lg font-bold">順番待ち登録</h1>
       <Card className="space-y-3">
