@@ -31,11 +31,11 @@ export async function GET(req: NextRequest) {
     shopId = callerAdmin.shop_id;
   }
 
-  // 過去6ヶ月分の決済履歴(成功・失敗とも)を取得し、月次集計はJS側で行う
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  sixMonthsAgo.setDate(1);
-  sixMonthsAgo.setHours(0, 0, 0, 0);
+  // 決済履歴(成功・失敗とも)は、全プラン共通で直近1年分を取得し、月次集計はJS側で行う
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  oneYearAgo.setDate(1);
+  oneYearAgo.setHours(0, 0, 0, 0);
 
   let query = supabase
     .from("payment_histories")
