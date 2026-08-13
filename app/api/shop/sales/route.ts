@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("payment_histories")
     .select("*, subscriptions!inner(shop_id, subscription_plans(plan_name), users(name), shops(name))")
-    .gte("created_at", sixMonthsAgo.toISOString())
+    .gte("created_at", oneYearAgo.toISOString())
     .order("created_at", { ascending: false });
 
   if (shopId) {
