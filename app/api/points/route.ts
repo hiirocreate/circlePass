@@ -39,12 +39,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 来店1回=1ポイント(店舗ごとに将来カスタマイズ可能な設計)
-    await supabase.from("point_histories").insert({
-      user_id: targetUserId,
-      shop_id: shopId,
-      point: 1,
-      description: "来店ポイント",
-    });
+    const { data: pointHistory } = await supabase
+      .from("point_histories")
+      .insert({
+        user_id: targetUserId,
+        shop_id: shopId,
+        point: 1,
+        description: "来店ポイント",
+      })
+      .select()
+      .single();
 
     const { data: membership } = await supabase
       .from("user_shop_memberships")
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
       await supabase.from("user_shop_memberships").insert({ user_id: targetUserId, shop_id: shopId, points: 1 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, undo: pointHistory ? { type: "visit_point", id: pointHistory.id } : null });
   }
 
   if (usedType === "reward_complete") {
@@ -153,11 +157,61 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  await supabase.from("subscription_histories").insert({
-    subscription_id: subscriptionId,
-    used_type: usedType,
-    memo: memo ?? null,
-  });
+  const { data: history } = await supabase
+    .from("subscription_histories")
+    .insert({
+      subscription_id: subscriptionId,
+      used_type: usedType,
+      memo: memo ?? null,
+    })
+    .select()
+    .single();
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, undo: history ? { type: "subscription_history", id: history.id } : null });
+}
+
+/**
+ * DELETE /api/points
+ * body: { type: "visit_point"|"subscription_history", id }
+ *
+ * 直前の操作を取り消す(誤操作の救済用)。取り消せる期間はあえて制限していないが、
+ * QR画面では直後の1回分のみUIから取り消せるようにしている。
+ */
+export async function DELETE(req: NextRequest) {
+  const adminClient = createAdminServerClient();
+  const { data: authUser } = await adminClient.auth.getUser();
+  if (!authUser?.user) {
+    return NextResponse.json({ error: "権限がありません" }, { status: 403 });
+  }
+
+  const { type, id } = await req.json();
+  const supabase = createServiceSupabase();
+
+  if (type === "visit_point") {
+    const { data: history } = await supabase.from("point_histories").select("*").eq("id", id).single();
+    if (!history) return NextResponse.json({ error: "対象が見つかりません" }, { status: 404 });
+
+    const { data: membership } = await supabase
+      .from("user_shop_memberships")
+      .select("*")
+      .eq("user_id", history.user_id)
+      .eq("shop_id", history.shop_id)
+      .maybeSingle();
+
+    if (membership) {
+      await supabase
+        .from("user_shop_memberships")
+        .update({ points: Math.max(0, membership.points - history.point) })
+        .eq("id", membership.id);
+    }
+    await supabase.from("point_histories").delete().eq("id", id);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (type === "subscription_history") {
+    await supabase.from("subscription_histories").delete().eq("id", id);
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "不正なリクエストです" }, { status: 400 });
 }
