@@ -132,6 +132,13 @@ export default function OperatorAdminPage() {
         </Card>
       </Link>
 
+      <Link href="/admin/accounts">
+        <Card className="hover:bg-black/5">
+          <p className="font-semibold">店舗アカウント・ログインURL管理</p>
+          <p className="text-sm text-black/50">店舗管理者のメール・パスワード変更、ログイン用URLの発行</p>
+        </Card>
+      </Link>
+
       <Card className="space-y-2">
         <p className="text-sm font-semibold">店舗新規登録</p>
         <input
