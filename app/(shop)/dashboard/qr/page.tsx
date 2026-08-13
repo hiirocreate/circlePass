@@ -108,6 +108,7 @@ export default function QrScanPage() {
       {scannedSub && (
         <Card className="space-y-2">
           <p className="text-sm font-semibold">利用内容を選択してください</p>
+          <Button onClick={() => useSubscriptionBenefit("visit_point")}>来店ポイント付与(+1pt)</Button>
           <Button onClick={() => useSubscriptionBenefit("drink_free")}>ドリンク無料</Button>
           <Button onClick={() => useSubscriptionBenefit("all_you_can_drink")}>飲み放題利用</Button>
           <Button onClick={() => useSubscriptionBenefit("other")} variant="outline">
