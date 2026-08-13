@@ -1,0 +1,53 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createServiceSupabase } from "@/lib/supabase";
+import { createAdminServerClient } from "@/lib/supabase-admin-server";
+
+/**
+ * GET /api/shop/subscriptions/[id]
+ * 店舗側がQRコード(subscriptionId)を読み取った直後に、
+ * そのお客様が実際に契約しているプランの内容(店舗が自由入力した特典テキスト)を
+ * 確認表示するために呼ぶ。
+ */
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const adminClient = createAdminServerClient();
+  const { data: authUser } = await adminClient.auth.getUser();
+  if (!authUser?.user) {
+    return NextResponse.json({ error: "権限がありません" }, { status: 403 });
+  }
+
+  const supabase = createServiceSupabase();
+
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("*, subscription_plans(plan_name, description, usage_limit), users(name)")
+    .eq("id", params.id)
+    .eq("status", "active")
+    .single();
+
+  if (!sub) {
+    return NextResponse.json({ error: "有効な契約が見つかりません" }, { status: 404 });
+  }
+
+  const plan = (sub as any).subscription_plans;
+  let usedThisMonth: number | null = null;
+  if (plan?.usage_limit) {
+    const periodStart = new Date();
+    periodStart.setDate(1);
+    periodStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("subscription_histories")
+      .select("*", { count: "exact", head: true })
+      .eq("subscription_id", params.id)
+      .gte("created_at", periodStart.toISOString());
+    usedThisMonth = count ?? 0;
+  }
+
+  return NextResponse.json({
+    subscriptionId: sub.id,
+    userName: (sub as any).users?.name ?? "",
+    planName: plan?.plan_name ?? "",
+    description: plan?.description ?? "",
+    usageLimit: plan?.usage_limit ?? null,
+    usedThisMonth,
+  });
+}
