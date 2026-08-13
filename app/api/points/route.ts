@@ -9,7 +9,7 @@ import { checkPlanAvailability } from "@/lib/plan-availability";
  * body:
  *   { userId, shopId, usedType: "drink_free"|"all_you_can_drink"|"other", subscriptionId? }
  *   または
- *   { userId, shopId, usedType: "visit_point" } -- 来店ポイント付与
+ *   { subscriptionId, shopId, usedType: "visit_point" } -- 来店ポイント付与(会員証QRから)
  *   または
  *   { shopId, usedType: "reward_complete", redemptionId } -- 特典交換の完了処理
  */
@@ -24,9 +24,23 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceSupabase();
 
   if (usedType === "visit_point") {
+    // 会員証のQRには subscriptionId しか載っていないため、そこから利用者を特定する
+    let targetUserId = userId;
+    if (!targetUserId && subscriptionId) {
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("user_id")
+        .eq("id", subscriptionId)
+        .single();
+      targetUserId = sub?.user_id;
+    }
+    if (!targetUserId) {
+      return NextResponse.json({ error: "利用者を特定できませんでした" }, { status: 400 });
+    }
+
     // 来店1回=1ポイント(店舗ごとに将来カスタマイズ可能な設計)
     await supabase.from("point_histories").insert({
-      user_id: userId,
+      user_id: targetUserId,
       shop_id: shopId,
       point: 1,
       description: "来店ポイント",
@@ -35,7 +49,7 @@ export async function POST(req: NextRequest) {
     const { data: membership } = await supabase
       .from("user_shop_memberships")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", targetUserId)
       .eq("shop_id", shopId)
       .maybeSingle();
 
@@ -45,7 +59,7 @@ export async function POST(req: NextRequest) {
         .update({ points: membership.points + 1 })
         .eq("id", membership.id);
     } else {
-      await supabase.from("user_shop_memberships").insert({ user_id: userId, shop_id: shopId, points: 1 });
+      await supabase.from("user_shop_memberships").insert({ user_id: targetUserId, shop_id: shopId, points: 1 });
     }
 
     return NextResponse.json({ ok: true });
