@@ -13,7 +13,7 @@ const config: Config = {
           white: "#FFFFFF",
           black: "#111111",
         },
-        accent: "var(--shop-accent-color, #C9A227)", // デフォルトは高級感のあるゴールド
+        accent: "var(--shop-accent-color, #EA580C)", // デフォルトはビビッドなオレンジ
       },
       fontFamily: {
         sans: ["'Noto Sans JP'", "sans-serif"],
