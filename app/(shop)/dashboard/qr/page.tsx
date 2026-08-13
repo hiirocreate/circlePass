@@ -7,18 +7,26 @@ import { Button } from "@/components/ui/Button";
 import { BackLink } from "@/components/ui/BackLink";
 
 type ScannedSubscription = { subscriptionId: string };
+type BenefitInfo = {
+  subscriptionId: string;
+  userName: string;
+  planName: string;
+  description: string;
+  usageLimit: number | null;
+  usedThisMonth: number | null;
+};
 
 const ACTION_LABEL: Record<string, string> = {
   visit_point: "来店ポイント付与(+1pt)",
-  drink_free: "ドリンク無料",
-  all_you_can_drink: "飲み放題利用",
-  other: "その他特典",
+  benefit_used: "特典利用",
 };
 
 export default function QrScanPage() {
   const { admin } = useCurrentAdmin();
   const scannerRef = useRef<any>(null);
   const [scannedSub, setScannedSub] = useState<ScannedSubscription | null>(null);
+  const [benefitInfo, setBenefitInfo] = useState<BenefitInfo | null>(null);
+  const [benefitError, setBenefitError] = useState<string | null>(null);
   const [redemptionDetail, setRedemptionDetail] = useState<any | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<{ type: string; id: string; label: string } | null>(null);
@@ -52,6 +60,16 @@ export default function QrScanPage() {
               } else if (parsed.subscriptionId) {
                 setLastAction(null);
                 setScannedSub(parsed);
+                // このお客様が実際に契約しているプランの特典内容(自由入力テキスト)を取得する
+                const res = await fetch(`/api/shop/subscriptions/${parsed.subscriptionId}`);
+                const d = await res.json();
+                if (d.error) {
+                  setBenefitError(d.error);
+                  setBenefitInfo(null);
+                } else {
+                  setBenefitInfo(d);
+                  setBenefitError(null);
+                }
               }
             } catch {
               // QRコード内容が不正な場合は無視
@@ -69,10 +87,14 @@ export default function QrScanPage() {
     };
   }, []);
 
-  const useSubscriptionBenefit = async (usedType: string) => {
+  const useBenefit = async (usedType: string) => {
     if (!scannedSub || !admin?.shop_id) return;
     const label = ACTION_LABEL[usedType] ?? usedType;
-    if (!confirm(`「${label}」を実行します。よろしいですか?`)) return;
+    const confirmText =
+      usedType === "benefit_used" && benefitInfo
+        ? `「${benefitInfo.description}」を利用済みにします。よろしいですか?`
+        : `「${label}」を実行します。よろしいですか?`;
+    if (!confirm(confirmText)) return;
 
     const res = await fetch("/api/points", {
       method: "POST",
@@ -81,6 +103,7 @@ export default function QrScanPage() {
         subscriptionId: scannedSub.subscriptionId,
         shopId: admin.shop_id,
         usedType,
+        memo: usedType === "benefit_used" ? benefitInfo?.description ?? null : null,
       }),
     });
     const d = await res.json();
@@ -88,10 +111,12 @@ export default function QrScanPage() {
       setMessage(d.error);
       setLastAction(null);
     } else {
-      setMessage(`「${label}」の処理が完了しました`);
+      setMessage(`「${usedType === "benefit_used" ? benefitInfo?.description : label}」の処理が完了しました`);
       setLastAction(d.undo ? { ...d.undo, label } : null);
     }
     setScannedSub(null);
+    setBenefitInfo(null);
+    setBenefitError(null);
     scannerRef.current?.resume();
   };
 
@@ -127,6 +152,8 @@ export default function QrScanPage() {
 
   const cancelScan = () => {
     setScannedSub(null);
+    setBenefitInfo(null);
+    setBenefitError(null);
     setRedemptionDetail(null);
     scannerRef.current?.resume();
   };
@@ -138,17 +165,32 @@ export default function QrScanPage() {
       <div id="qr-reader" className="overflow-hidden rounded-2xl" />
 
       {scannedSub && (
-        <Card className="space-y-2">
-          <p className="text-sm font-semibold">利用内容を選択してください</p>
-          <Button onClick={() => useSubscriptionBenefit("visit_point")}>来店ポイント付与(+1pt)</Button>
-          <Button onClick={() => useSubscriptionBenefit("drink_free")}>ドリンク無料</Button>
-          <Button onClick={() => useSubscriptionBenefit("all_you_can_drink")}>飲み放題利用</Button>
-          <Button onClick={() => useSubscriptionBenefit("other")} variant="outline">
-            その他特典
-          </Button>
-          <Button variant="outline" onClick={cancelScan}>
-            キャンセル
-          </Button>
+        <Card className="space-y-3">
+          {benefitError && <p className="text-sm text-red-600">{benefitError}</p>}
+
+          {benefitInfo && (
+            <div>
+              <p className="text-xs text-black/50">{benefitInfo.userName} 様 / {benefitInfo.planName}</p>
+              <p className="mt-1 text-base font-semibold">{benefitInfo.description || "(特典内容が未設定です)"}</p>
+              {benefitInfo.usageLimit && (
+                <p className="mt-1 text-xs text-black/50">
+                  今月の利用状況: {benefitInfo.usedThisMonth} / {benefitInfo.usageLimit} 回
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-2 border-t border-black/5 pt-3">
+            {benefitInfo && (
+              <Button onClick={() => useBenefit("benefit_used")}>この特典を利用済みにする</Button>
+            )}
+            <Button variant="outline" onClick={() => useBenefit("visit_point")}>
+              来店ポイント付与(+1pt)
+            </Button>
+            <Button variant="outline" onClick={cancelScan}>
+              キャンセル
+            </Button>
+          </div>
         </Card>
       )}
 
